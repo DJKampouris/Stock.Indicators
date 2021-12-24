@@ -238,6 +238,10 @@ namespace Skender.Stock.Indicators
                 PeriodSize.Week => EnglishCalendar.GetWeekOfYear(d, EnglishCalendarWeekRule, EnglishFirstDayOfWeek),
                 PeriodSize.Day => d.Day,
                 PeriodSize.OneHour => d.Hour,
+                PeriodSize.ThirtyMinutes => d.Hour / 2,
+                PeriodSize.FifteenMinutes => d.Hour / 4,
+                PeriodSize.FiveMinutes => d.Hour / 12,
+                PeriodSize.OneMinute => d.Hour / 60,
                 _ => 0
             };
         }
@@ -265,6 +269,18 @@ namespace Skender.Stock.Indicators
 
                 PeriodSize.OneHour => quotes
                 .Select(x => x.Date.Hour).Distinct().Count(),
+
+                PeriodSize.ThirtyMinutes=> quotes
+                    .Select(x => x.Date.Hour).Distinct().Count() * 2,
+
+                PeriodSize.FifteenMinutes => quotes
+                    .Select(x => x.Date.Hour).Distinct().Count() * 4,
+
+                PeriodSize.FiveMinutes=> quotes
+                    .Select(x => x.Date.Hour).Distinct().Count() * 12,
+
+                PeriodSize.OneMinute => quotes
+                    .Select(x => x.Date.Hour).Distinct().Count() * 60,
 
                 _ => 0
             };
