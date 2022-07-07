@@ -1,104 +1,148 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Skender.Stock.Indicators;
 
-namespace Internal.Tests
+namespace Internal.Tests;
+
+[TestClass]
+public class Mama : TestBase
 {
-    [TestClass]
-    public class Mama : TestBase
+    [TestMethod]
+    public void Standard()
     {
+        double fastLimit = 0.5;
+        double slowLimit = 0.05;
 
-        [TestMethod]
-        public void Standard()
-        {
-            double fastLimit = 0.5;
-            double slowLimit = 0.05;
+        List<MamaResult> results = quotes.GetMama(fastLimit, slowLimit)
+            .ToList();
 
-            List<MamaResult> results = quotes.GetMama(fastLimit, slowLimit)
-                .ToList();
+        // assertions
 
-            // assertions
+        // proper quantities
+        // should always be the same number of results as there is quotes
+        Assert.AreEqual(502, results.Count);
+        Assert.AreEqual(497, results.Count(x => x.Mama != null));
 
-            // proper quantities
-            // should always be the same number of results as there is quotes
-            Assert.AreEqual(502, results.Count);
-            Assert.AreEqual(497, results.Where(x => x.Mama != null).Count());
+        // sample values
+        MamaResult r1 = results[4];
+        Assert.AreEqual(null, r1.Mama);
+        Assert.AreEqual(null, r1.Fama);
 
-            // sample values
-            MamaResult r1 = results[4];
-            Assert.AreEqual(null, r1.Mama);
-            Assert.AreEqual(null, r1.Fama);
+        MamaResult r2 = results[5];
+        Assert.AreEqual(213.73, r2.Mama);
+        Assert.AreEqual(213.73, r2.Fama);
 
-            MamaResult r2 = results[5];
-            Assert.AreEqual(213.73m, r2.Mama);
-            Assert.AreEqual(213.73m, r2.Fama);
+        MamaResult r3 = results[6];
+        Assert.AreEqual(213.7850, NullMath.Round(r3.Mama, 4));
+        Assert.AreEqual(213.7438, NullMath.Round(r3.Fama, 4));
 
-            MamaResult r3 = results[6];
-            Assert.AreEqual(213.7850m, Math.Round((decimal)r3.Mama, 4));
-            Assert.AreEqual(213.7438m, Math.Round((decimal)r3.Fama, 4));
+        MamaResult r4 = results[25];
+        Assert.AreEqual(215.9524, NullMath.Round(r4.Mama, 4));
+        Assert.AreEqual(215.1407, NullMath.Round(r4.Fama, 4));
 
-            MamaResult r4 = results[25];
-            Assert.AreEqual(215.9524m, Math.Round((decimal)r4.Mama, 4));
-            Assert.AreEqual(215.1407m, Math.Round((decimal)r4.Fama, 4));
+        MamaResult r5 = results[149];
+        Assert.AreEqual(235.6593, NullMath.Round(r5.Mama, 4));
+        Assert.AreEqual(234.3660, NullMath.Round(r5.Fama, 4));
 
-            MamaResult r5 = results[149];
-            Assert.AreEqual(235.6593m, Math.Round((decimal)r5.Mama, 4));
-            Assert.AreEqual(234.3660m, Math.Round((decimal)r5.Fama, 4));
+        MamaResult r6 = results[249];
+        Assert.AreEqual(256.8026, NullMath.Round(r6.Mama, 4));
+        Assert.AreEqual(254.0605, NullMath.Round(r6.Fama, 4));
 
-            MamaResult r6 = results[249];
-            Assert.AreEqual(256.8026m, Math.Round((decimal)r6.Mama, 4));
-            Assert.AreEqual(254.0605m, Math.Round((decimal)r6.Fama, 4));
+        MamaResult r7 = results[501];
+        Assert.AreEqual(244.1092, NullMath.Round(r7.Mama, 4));
+        Assert.AreEqual(252.6139, NullMath.Round(r7.Fama, 4));
+    }
 
-            MamaResult r7 = results[501];
-            Assert.AreEqual(244.1092m, Math.Round((decimal)r7.Mama, 4));
-            Assert.AreEqual(252.6139m, Math.Round((decimal)r7.Fama, 4));
-        }
+    [TestMethod]
+    public void UseTuple()
+    {
+        IEnumerable<MamaResult> results = quotes
+            .Use(CandlePart.Close)
+            .GetMama();
 
-        [TestMethod]
-        public void BadData()
-        {
-            IEnumerable<MamaResult> r = Indicator.GetMama(badQuotes);
-            Assert.AreEqual(502, r.Count());
-        }
+        Assert.AreEqual(502, results.Count());
+        Assert.AreEqual(497, results.Count(x => x.Mama != null));
+    }
 
-        [TestMethod]
-        public void Removed()
-        {
-            double fastLimit = 0.5;
-            double slowLimit = 0.05;
+    [TestMethod]
+    public void TupleNaN()
+    {
+        IEnumerable<MamaResult> r = tupleNanny.GetMama();
 
-            List<MamaResult> results = quotes.GetMama(fastLimit, slowLimit)
-                .RemoveWarmupPeriods()
-                .ToList();
+        Assert.AreEqual(200, r.Count());
+        Assert.AreEqual(0, r.Count(x => x.Mama is double and double.NaN));
+    }
 
-            // assertions
-            Assert.AreEqual(502 - 50, results.Count);
+    [TestMethod]
+    public void Chainee()
+    {
+        IEnumerable<MamaResult> results = quotes
+            .GetSma(2)
+            .GetMama();
 
-            MamaResult last = results.LastOrDefault();
-            Assert.AreEqual(244.1092m, Math.Round((decimal)last.Mama, 4));
-            Assert.AreEqual(252.6139m, Math.Round((decimal)last.Fama, 4));
-        }
+        Assert.AreEqual(502, results.Count());
+        Assert.AreEqual(496, results.Count(x => x.Mama != null));
+    }
 
-        [TestMethod]
-        public void Exceptions()
-        {
-            // bad fast period (same as slow period)
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-                Indicator.GetMama(quotes, 0.5, 0.5));
+    [TestMethod]
+    public void Chainor()
+    {
+        IEnumerable<SmaResult> results = quotes
+            .GetMama()
+            .GetSma(10);
 
-            // bad fast period (cannot be 1 or more)
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-                Indicator.GetMama(quotes, 1, 0.5));
+        Assert.AreEqual(502, results.Count());
+        Assert.AreEqual(488, results.Count(x => x.Sma != null));
+    }
 
-            // bad slow period
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-                Indicator.GetMama(quotes, 0.5, 0));
+    [TestMethod]
+    public void BadData()
+    {
+        IEnumerable<MamaResult> r = Indicator.GetMama(badQuotes);
+        Assert.AreEqual(502, r.Count());
+        Assert.AreEqual(0, r.Count(x => x.Mama is double and double.NaN));
+    }
 
-            // insufficient quotes
-            Assert.ThrowsException<BadQuotesException>(() =>
-                Indicator.GetMama(TestData.GetDefault(49)));
-        }
+    [TestMethod]
+    public void NoQuotes()
+    {
+        IEnumerable<MamaResult> r0 = noquotes.GetMama();
+        Assert.AreEqual(0, r0.Count());
+
+        IEnumerable<MamaResult> r1 = onequote.GetMama();
+        Assert.AreEqual(1, r1.Count());
+    }
+
+    [TestMethod]
+    public void Removed()
+    {
+        double fastLimit = 0.5;
+        double slowLimit = 0.05;
+
+        List<MamaResult> results = quotes.GetMama(fastLimit, slowLimit)
+            .RemoveWarmupPeriods()
+            .ToList();
+
+        // assertions
+        Assert.AreEqual(502 - 50, results.Count);
+
+        MamaResult last = results.LastOrDefault();
+        Assert.AreEqual(244.1092, NullMath.Round(last.Mama, 4));
+        Assert.AreEqual(252.6139, NullMath.Round(last.Fama, 4));
+    }
+
+    [TestMethod]
+    public void Exceptions()
+    {
+        // bad fast period (same as slow period)
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            Indicator.GetMama(quotes, 0.5, 0.5));
+
+        // bad fast period (cannot be 1 or more)
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            Indicator.GetMama(quotes, 1, 0.5));
+
+        // bad slow period
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            Indicator.GetMama(quotes, 0.5, 0));
     }
 }

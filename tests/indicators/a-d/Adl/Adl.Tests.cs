@@ -1,101 +1,104 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Skender.Stock.Indicators;
 
-namespace Internal.Tests
+namespace Internal.Tests;
+
+[TestClass]
+public class Adl : TestBase
 {
-    [TestClass]
-    public class Adl : TestBase
+    [TestMethod]
+    public void Standard()
     {
+        List<AdlResult> results = quotes.GetAdl().ToList();
 
-        [TestMethod]
-        public void Standard()
-        {
+        // assertions
 
-            List<AdlResult> results = quotes.GetAdl().ToList();
+        // should always be the same number of results as there is quotes
+        Assert.AreEqual(502, results.Count);
+        Assert.AreEqual(502, results.Count(x => x.AdlSma == null));
 
-            // assertions
+        // sample values
+        AdlResult r1 = results[249];
+        Assert.AreEqual(0.7778, NullMath.Round(r1.MoneyFlowMultiplier, 4));
+        Assert.AreEqual(36433792.89, NullMath.Round(r1.MoneyFlowVolume, 2));
+        Assert.AreEqual(3266400865.74, NullMath.Round(r1.Adl, 2));
+        Assert.AreEqual(null, r1.AdlSma);
 
-            // should always be the same number of results as there is quotes
-            Assert.AreEqual(502, results.Count);
-            Assert.AreEqual(502, results.Where(x => x.AdlSma == null).Count());
-
-            // sample values
-            AdlResult r1 = results[249];
-            Assert.AreEqual(0.7778, Math.Round(r1.MoneyFlowMultiplier, 4));
-            Assert.AreEqual(36433792.89, Math.Round(r1.MoneyFlowVolume, 2));
-            Assert.AreEqual(3266400865.74, Math.Round(r1.Adl, 2));
-            Assert.AreEqual(null, r1.AdlSma);
-
-            AdlResult r2 = results[501];
-            Assert.AreEqual(0.8052, Math.Round(r2.MoneyFlowMultiplier, 4));
-            Assert.AreEqual(118396116.25, Math.Round(r2.MoneyFlowVolume, 2));
-            Assert.AreEqual(3439986548.42, Math.Round(r2.Adl, 2));
-            Assert.AreEqual(null, r2.AdlSma);
-        }
-
-        [TestMethod]
-        public void ConvertToQuotes()
-        {
-            List<Quote> newQuotes = quotes.GetAdl()
-                .ConvertToQuotes()
-                .ToList();
-
-            Assert.AreEqual(502, newQuotes.Count);
-
-            Quote q1 = newQuotes[249];
-            Assert.AreEqual(3266400865.74m, Math.Round(q1.Close, 2));
-
-            Quote q2 = newQuotes[501];
-            Assert.AreEqual(3439986548.42m, Math.Round(q2.Close, 2));
-        }
-
-        [TestMethod]
-        public void BadData()
-        {
-            IEnumerable<AdlResult> r = Indicator.GetAdl(badQuotes);
-            Assert.AreEqual(502, r.Count());
-        }
-
-        [TestMethod]
-        public void BigData()
-        {
-            IEnumerable<AdlResult> r = Indicator.GetAdl(bigQuotes);
-            Assert.AreEqual(1246, r.Count());
-        }
-
-        [TestMethod]
-        public void WithSma()
-        {
-
-            List<AdlResult> results = Indicator.GetAdl(quotes, 20).ToList();
-
-            // assertions
-
-            // should always be the same number of results as there is quotes
-            Assert.AreEqual(502, results.Count);
-            Assert.AreEqual(483, results.Where(x => x.AdlSma != null).Count());
-
-            // sample value
-            AdlResult r = results[501];
-            Assert.AreEqual(0.8052, Math.Round(r.MoneyFlowMultiplier, 4));
-            Assert.AreEqual(118396116.25, Math.Round(r.MoneyFlowVolume, 2));
-            Assert.AreEqual(3439986548.42, Math.Round(r.Adl, 2));
-            Assert.AreEqual(3595352721.16, Math.Round((double)r.AdlSma, 2));
-        }
-
-        [TestMethod]
-        public void Exceptions()
-        {
-            // bad SMA period
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-                Indicator.GetAdl(quotes, 0));
-
-            // insufficient quotes
-            Assert.ThrowsException<BadQuotesException>(() =>
-                Indicator.GetAdl(TestData.GetDefault(1)));
-        }
+        AdlResult r2 = results[501];
+        Assert.AreEqual(0.8052, NullMath.Round(r2.MoneyFlowMultiplier, 4));
+        Assert.AreEqual(118396116.25, NullMath.Round(r2.MoneyFlowVolume, 2));
+        Assert.AreEqual(3439986548.42, NullMath.Round(r2.Adl, 2));
+        Assert.AreEqual(null, r2.AdlSma);
     }
+
+    [TestMethod]
+    public void WithSma()
+    {
+        List<AdlResult> results = Indicator.GetAdl(quotes, 20).ToList();
+
+        // assertions
+
+        // should always be the same number of results as there is quotes
+        Assert.AreEqual(502, results.Count);
+        Assert.AreEqual(483, results.Count(x => x.AdlSma != null));
+
+        // sample value
+        AdlResult r = results[501];
+        Assert.AreEqual(0.8052, NullMath.Round(r.MoneyFlowMultiplier, 4));
+        Assert.AreEqual(118396116.25, NullMath.Round(r.MoneyFlowVolume, 2));
+        Assert.AreEqual(3439986548.42, NullMath.Round(r.Adl, 2));
+        Assert.AreEqual(3595352721.16, NullMath.Round(r.AdlSma, 2));
+    }
+
+    [TestMethod]
+    public void Chainor()
+    {
+        IEnumerable<SmaResult> results = quotes
+            .GetAdl()
+            .GetSma(10);
+
+        // assertions
+
+        // proper quantities
+        Assert.AreEqual(502, results.Count());
+        Assert.AreEqual(493, results.Count(x => x.Sma != null));
+    }
+
+    [TestMethod]
+    public void BadData()
+    {
+        IEnumerable<AdlResult> r = badQuotes.GetAdl();
+        Assert.AreEqual(502, r.Count());
+        Assert.AreEqual(0, r.Count(x => double.IsNaN(x.Adl)));
+    }
+
+    [TestMethod]
+    public void BigData()
+    {
+        IEnumerable<AdlResult> r = bigQuotes.GetAdl();
+        Assert.AreEqual(1246, r.Count());
+    }
+
+    [TestMethod]
+    public void RandomData()
+    {
+        IEnumerable<AdlResult> r = randomQuotes.GetAdl();
+        Assert.AreEqual(1000, r.Count());
+    }
+
+    [TestMethod]
+    public void NoQuotes()
+    {
+        IEnumerable<AdlResult> r0 = noquotes.GetAdl();
+        Assert.AreEqual(0, r0.Count());
+
+        IEnumerable<AdlResult> r1 = onequote.GetAdl();
+        Assert.AreEqual(1, r1.Count());
+    }
+
+    // bad SMA period
+    [TestMethod]
+    public void Exceptions()
+        => Assert.ThrowsException<ArgumentOutOfRangeException>(()
+            => Indicator.GetAdl(quotes, 0));
 }

@@ -15,7 +15,7 @@ Created by J. Welles Wilder, [Average True Range](https://en.wikipedia.org/wiki/
 ```csharp
 // usage
 IEnumerable<AtrResult> results =
-  quotes.GetAtr(lookbackPeriods);  
+  quotes.GetAtr(lookbackPeriods);
 ```
 
 ## Parameters
@@ -26,9 +26,9 @@ IEnumerable<AtrResult> results =
 
 ### Historical quotes requirements
 
-You must have at least `N+100` periods of `quotes`.  Since this uses a smoothing technique, we recommend you use at least `N+250` data points prior to the intended usage date for better precision.
+You must have at least `N+100` periods of `quotes` to cover the convergence periods.  Since this uses a smoothing technique, we recommend you use at least `N+250` data points prior to the intended usage date for better precision.
 
-`quotes` is an `IEnumerable<TQuote>` collection of historical price quotes.  It should have a consistent frequency (day, hour, minute, etc).  See [the Guide]({{site.baseurl}}/guide/#historical-quotes) for more information.
+`quotes` is a collection of generic `TQuote` historical price quotes.  It should have a consistent frequency (day, hour, minute, etc).  See [the Guide]({{site.baseurl}}/guide/#historical-quotes) for more information.
 
 ## Response
 
@@ -48,24 +48,28 @@ IEnumerable<AtrResult>
 | name | type | notes
 | -- |-- |--
 | `Date` | DateTime | Date
-| `Tr` | decimal | True Range for current period
-| `Atr` | decimal | Average True Range for `N` lookback periods
-| `Atrp` | decimal | Average True Range Percent is `(ATR/Close Price)*100`.  This normalizes so it can be compared to other stocks.
+| `Tr` | double | True Range for current period
+| `Atr` | double | Average True Range for `N` lookback periods
+| `Atrp` | double | Average True Range Percent is `(ATR/Price)*100`.  This normalizes so it can be compared to other stocks.
 
 ### Utilities
 
+- [.Condense()]({{site.baseurl}}/utilities#condense)
 - [.Find(lookupDate)]({{site.baseurl}}/utilities#find-indicator-result-by-date)
 - [.RemoveWarmupPeriods()]({{site.baseurl}}/utilities#remove-warmup-periods)
 - [.RemoveWarmupPeriods(qty)]({{site.baseurl}}/utilities#remove-warmup-periods)
 
 See [Utilities and Helpers]({{site.baseurl}}/utilities#utilities-for-indicator-results) for more information.
 
-## Example
+## Chaining
+
+Results can be further processed on `Atrp` with additional chain-enabled indicators.
 
 ```csharp
-// fetch historical quotes from your feed (your method)
-IEnumerable<Quote> quotes = GetHistoryFromFeed("SPY");
-
-// calculate 14-period ATR
-IEnumerable<AtrResult> results = quotes.GetAtr(14);
+// example
+var results = quotes
+    .GetAtr(..)
+    .GetSlope(..);
 ```
+
+This indicator must be generated from `quotes` and **cannot** be generated from results of another chain-enabled indicator or method.

@@ -1,13 +1,17 @@
-using System;
+namespace Skender.Stock.Indicators;
 
-namespace Skender.Stock.Indicators
+[Serializable]
+public sealed class StdDevResult : ResultBase, IReusableResult
 {
-    [Serializable]
-    public class StdDevResult : ResultBase
+    public StdDevResult(DateTime date)
     {
-        public double? StdDev { get; set; }
-        public double? Mean { get; set; }
-        public double? ZScore { get; set; }
-        public double? StdDevSma { get; set; }
+        Date = date;
     }
+
+    public double? StdDev { get; set; }
+    public double? Mean { get; set; }
+    public double? ZScore { get; set; }
+    public double? StdDevSma { get; set; }
+
+    double? IReusableResult.Value => StdDev;
 }

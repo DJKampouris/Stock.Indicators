@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<indicator>
+<info>
   <summary>
-    Correlation Coefficient between two quote histories, based on Close price.
+    Correlation Coefficient between two quote histories, based on price.
     <para>
       See
       <see href="https://daveskender.github.io/Stock.Indicators/indicators/Correlation/#content">documentation</see>
@@ -10,13 +10,13 @@
     </para>
   </summary>
   <typeparam name="TQuote">Configurable Quote type.  See Guide for more information.</typeparam>
-  <param name="quotesA">Historical price quotes for comparison.</param>
-  <param name="quotesB">Historical price quotes for comparison.</param>
+  <param name="quotesA">Historical price quotes A for comparison.</param>
+  <param name="quotesB">Historical price quotes B for comparison.</param>
   <param name="lookbackPeriods">Number of periods in the lookback window.</param>
   <returns>
     Time series of Correlation Coefficient values.
     R², Variance, and Covariance are also included.
   </returns>
   <exception cref="ArgumentOutOfRangeException">Invalid parameter value provided.</exception>
-  <exception cref="BadQuotesException">Insufficient quotes provided.</exception>
-</indicator>
+  <exception cref="InvalidQuotesException">Invalid quotes provided.</exception>
+</info>

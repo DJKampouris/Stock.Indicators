@@ -1,31 +1,35 @@
-using System.Collections.Generic;
-using System.Linq;
+namespace Skender.Stock.Indicators;
 
-namespace Skender.Stock.Indicators
+public static class Candlesticks
 {
-    public static class Candlesticks
+    public static IEnumerable<CandleResult> Condense(
+        this IEnumerable<CandleResult> candleResults) => candleResults
+            .Where(candle => candle.Match != Match.None)
+            .ToList();
+
+    // convert/sort quotes into candles
+    internal static List<CandleResult> ToCandleResults<TQuote>(
+        this IEnumerable<TQuote> quotes)
+        where TQuote : IQuote
     {
-        // convert/sort quotes into candles
-        internal static List<Candle> ConvertToCandles<TQuote>(
-            this IEnumerable<TQuote> quotes)
-            where TQuote : IQuote
-        {
-            List<Candle> candlesList = quotes
-                .Select(x => new Candle
+        List<CandleResult> candlesList = quotes
+            .Select(x => new CandleResult(x.Date)
+            {
+                Match = Match.None,
+                Candle = new CandleProperties
                 {
                     Date = x.Date,
                     Open = x.Open,
                     High = x.High,
                     Low = x.Low,
-                    Close = x.Close
-                })
-                .OrderBy(x => x.Date)
-                .ToList();
+                    Close = x.Close,
+                    Volume = x.Volume
+                }
+            })
+            .OrderBy(x => x.Date)
+            .ToList();
 
-            // validate
-            return candlesList == null || candlesList.Count == 0
-                ? throw new BadQuotesException(nameof(quotes), "No historical quotes provided.")
-                : candlesList;
-        }
+        // validate
+        return candlesList;
     }
 }
